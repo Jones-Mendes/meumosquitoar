@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title> Meu mosquito AR</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+                <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+                <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+                <script>
+                    // Gestos nativos no canvas: 1 dedo rotaciona, 2 dedos fazem pinch (zoom)
+                    AFRAME.registerComponent('touch-gestures', {
+                        schema: {
+                            minScale: { default: 0.3 },
+                            maxScale: { default: 4.0 },
+                            rotateSpeed: { default: 0.35 },
+                            pinchSpeed: { default: 0.003 }
+                        },
+                        init: function () {
+                            this._active = false;
+                            this._lastOneFinger = null;
+                            this._lastPinchDistance = 0;
+                            this._boundStart = this.onTouchStart.bind(this);
+                            this._boundMove = this.onTouchMove.bind(this);
+                            this._boundEnd = this.onTouchEnd.bind(this);
+
+                            this.sceneEl = this.el.sceneEl;
+                            this.sceneEl.addEventListener('loaded', () => {
+                                this.canvas = this.sceneEl.canvas;
+                                if (!this.canvas) return;
+                                this.canvas.style.touchAction = 'none';
+                                this.canvas.addEventListener('touchstart', this._boundStart, { passive: false });
+                                this.canvas.addEventListener('touchmove', this._boundMove, { passive: false });
+                                this.canvas.addEventListener('touchend', this._boundEnd, { passive: false });
+                                this.canvas.addEventListener('touchcancel', this._boundEnd, { passive: false });
+                            });
+                        },
+                        remove: function () {
+                            if (!this.canvas) return;
+                            this.canvas.removeEventListener('touchstart', this._boundStart);
+                            this.canvas.removeEventListener('touchmove', this._boundMove);
+                            this.canvas.removeEventListener('touchend', this._boundEnd);
+                            this.canvas.removeEventListener('touchcancel', this._boundEnd);
+                        },
+                        isMarkerVisible: function () {
+                            const marker = this.el.parentEl;
+                            return marker && marker.object3D && marker.object3D.visible;
+                        },
+                        distance: function (t1, t2) {
+                            const dx = t1.clientX - t2.clientX;
+                            const dy = t1.clientY - t2.clientY;
+                            return Math.sqrt(dx * dx + dy * dy);
+                        },
+                        onTouchStart: function (evt) {
+                            if (!this.isMarkerVisible()) return;
+                            if (evt.touches.length === 1) {
+                                this._active = true;
+                                this._lastOneFinger = {
+                                    x: evt.touches[0].clientX,
+                                    y: evt.touches[0].clientY
+                                };
+                                this._lastPinchDistance = 0;
+                            } else if (evt.touches.length === 2) {
+                                this._active = true;
+                                this._lastOneFinger = null;
+                                this._lastPinchDistance = this.distance(evt.touches[0], evt.touches[1]);
+                            }
+                        },
+                        onTouchMove: function (evt) {
+                            if (!this._active || !this.isMarkerVisible()) return;
+                            evt.preventDefault();
+
+                            if (evt.touches.length === 1 && this._lastOneFinger) {
+                                const touch = evt.touches[0];
+                                const dx = touch.clientX - this._lastOneFinger.x;
+                                const dy = touch.clientY - this._lastOneFinger.y;
+                                const rotation = this.el.getAttribute('rotation');
+                                rotation.y += dx * this.data.rotateSpeed;
+                                rotation.x += dy * this.data.rotateSpeed;
+                                rotation.x = Math.max(-85, Math.min(85, rotation.x));
+                                this.el.setAttribute('rotation', rotation);
+                                this._lastOneFinger = { x: touch.clientX, y: touch.clientY };
+                                return;
+                            }
+
+                            if (evt.touches.length === 2) {
+                                const currentDistance = this.distance(evt.touches[0], evt.touches[1]);
+                                if (this._lastPinchDistance > 0) {
+                                    const delta = currentDistance - this._lastPinchDistance;
+                                    const scale = this.el.getAttribute('scale');
+                                    const factor = 1 + delta * this.data.pinchSpeed;
+                                    const next = Math.max(this.data.minScale, Math.min(this.data.maxScale, scale.x * factor));
+                                    this.el.setAttribute('scale', `${next} ${next} ${next}`);
+                                }
+                                this._lastPinchDistance = currentDistance;
+                            }
+                        },
+                        onTouchEnd: function (evt) {
+                            if (evt.touches.length === 0) {
+                                this._active = false;
+                                this._lastOneFinger = null;
+                                this._lastPinchDistance = 0;
+                            }
+                            if (evt.touches.length === 1) {
+                                this._lastOneFinger = {
+                                    x: evt.touches[0].clientX,
+                                    y: evt.touches[0].clientY
+                                };
+                                this._lastPinchDistance = 0;
+                            }
+                        }
+                    });
+                </script>
+    <style>
+        html, body {
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <a-scene
+        embedded
+        arjs="sourceType: webcam;"
+        renderer="colorManagement: true; physicallyCorrectLights: true; toneMapping: ACESFilmic; exposure: 1.35; gammaOutput: true;">
+        <a-entity camera></a-entity>
+        <a-marker preset="hiro">
+            <a-entity
+                gltf-model="url(Mosquito.glb)"
+                scale="1.5 1.5 1.5"
+                position="0 0 0"
+                rotation="0 0 0"
+                animation-mixer="clip: *; loop: repeat;"
+                touch-gestures
+                event-set__click="_event: click; animation: property: scale; to: 2 2 2; dur: 200; dir: alternate; loop: 2;">
+            </a-entity>
+            <a-light type="ambient" color="#ffffff" intensity="1.0"></a-light>
+            <a-light type="hemisphere" color="#ffffff" groundColor="#b3c6ff" intensity="0.8"></a-light>
+            <a-light type="directional" color="#ffffff" intensity="1.8" position="-1 2 1"></a-light>
+            <a-light type="directional" color="#fff2d6" intensity="0.9" position="1 1 1"></a-light>
+        </a-marker>
+    </a-scene>
+</body>
+
+</html>
