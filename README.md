@@ -2,6 +2,9 @@
 
 ## Descrição
 Esta atividade integra o **curso de imersão em realidade aumentada**, ministrado pelo iRede, e consiste em uma aplicação prática desenvolvida com os frameworks **A-Frame** e **AR.js**. O projeto utiliza um modelo 3D de mosquito `(Mosquito.glb)`, com tamanho de 58,6 KB, otimizado para execução em ambientes web. A aplicação projeta o modelo sobre um marcador do tipo **hiro** e foi configurada para funcionar em dispositivos móveis e desktops com suporte a câmera, proporcionando uma experiência acessível e multiplataforma.
+<div align="center">
+<img width="386" height="386" alt="image" src="https://github.com/user-attachments/assets/e8b85311-c56a-49df-85bc-475946e05944" />
+</div>
 
 ### Configurações do Modelo
 - **Posição**: `position="0 0 0"` (centralizado no marcador).
@@ -29,7 +32,7 @@ A cena conta com:
 
 ### Como executar 🦟
 1. Acesse o link da aplicação  
-Abra em seu navegador: [meumosquitoar.netlify.app.]
+Abra em seu navegador: [meumosquitoar.netlify.app](meumosquitoar.netlify.app)
 
 2. Permita o uso da câmera  
 Ao carregar a página, o navegador solicitará acesso à câmera. Clique em permitir para continuar.
