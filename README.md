@@ -24,7 +24,7 @@ A cena conta com:
 ### Interações
 1. **Pinch para zoom**: Ajusta a escala do modelo com dois dedos.
 2. **Rotação com um dedo**: Permite rotacionar o modelo horizontal e verticalmente.
-3. **Toque rápido (nova interação)**: Dispara uma animação de "pulso" que aumenta e reduz a escala do modelo.
+3. **Toque rápido**: Dispara uma animação de "pulso" que aumenta e reduz a escala do modelo.
 
 ### Requisitos
 - Navegador com suporte a WebXR e permissão de câmera.
